@@ -1,0 +1,85 @@
+<!--Fait par Olivier Provost-->
+<!--Pour le troisième atelier du cours de veille technologique-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atelier3</title>
+
+</head>
+
+<body>
+    <label>city</label><input type="text" id="city">
+    <input onclick="ChangeTown()" type="submit" id="button" value="Previsions">
+    <div id="lineChart" style="margin:auto;"></div>
+    <div>À noter que ma clé d'accès n'est plus valide</div>
+
+</body>
+<script src="jquery-3.4.1.min.js"></script>
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script defer>
+    var data = null;
+    google.charts.load('current', { packages: ['corechart'], language: 'fr' });
+    google.charts.setOnLoadCallback(ChangeTown);
+
+    function ChangeTown() 
+    {
+        let city = "Montréal";
+        if (document.getElementById("city").value != "") {
+            city = document.getElementById("city").value;
+        }
+        //
+        let API_Key = "51c762129c3b062cc44cee3eae8ca881"
+        let url = "https://api.openweathermap.org/data/2.5/forecast?units=metric&q="+city+"&appid="+API_Key;
+
+        $.ajax({
+            url: url,
+            success: (forecastData) => {
+               let forecast = forecastData.list;
+                SetForecast(forecast);
+            },
+            error: (errorThrown) => {
+                console.log(errorThrown);
+            }
+        })
+        return city;
+    }
+    function SetForecast(forecast) {
+        let city = "";
+        let dailyForecast = [];
+
+        if (forecast.length == 0)
+          city = ChangeTown();
+
+        forecast.forEach(element => {
+            dailyForecast.push([element["dt_txt"], element["main"]["temp_max"], element["main"]["temp_min"]])
+        });
+        data = new google.visualization.DataTable();
+        data.addColumn('string', 'date');
+        data.addColumn('number', 'Maximum');
+        data.addColumn('number', 'Minimum');
+        data.addRows(dailyForecast);
+        RenderForecast(dailyForecast)
+    }
+
+    function RenderForecast(dailyForecast) {
+        var options = {
+            title: "Montréal - Prévision 14 jours 2023",
+            titleTextStyle: { fontSize: '32', color: 'green'},
+            series: { 0: {color: 'cyan'} }
+            };
+        if(document.getElementById("city").value != "")
+            options = {
+                title: document.getElementById("city").value+" - Prévision 14 jours 2023",
+                titleTextStyle: { fontSize: '32', color: 'green'},
+                series: { 0: {color: 'cyan'} }
+                };
+        var lineChart = new google.visualization.LineChart(document.getElementById('lineChart'));
+        lineChart.draw(data, options)
+    }
+</script>
+
+</html>
